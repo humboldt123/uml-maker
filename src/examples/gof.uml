@@ -1,0 +1,558 @@
+// =====================================================================
+// Kitchen-sink example: every language feature + all 23 GoF patterns.
+// Each pattern is its own @group so the layout keeps it together.
+// =====================================================================
+
+@direction down
+@spacing compact
+@frames on
+
+// ---------------------------------------------------------------------
+// LANGUAGE FEATURES (no pattern)
+// ---------------------------------------------------------------------
+@group features: Shape, Drawable, Color, Point, Canvas, Logger, Cloneable
+
+# abstract class, abstract + static members, all four visibilities
+abstract class Shape <<Serializable>>
+#origin: Point
+-id: int
+~packageNote: String
++{static} count: int
+---
++Shape(origin: Point)
++area(): double {abstract}
++draw(c: Canvas): void {abstract}
++{static} nextId(): int
+#move(dx: int, dy: int): void
+
+# interface with stereotype shown above name
+interface Drawable
+---
++draw(c: Canvas): void
+
+# enum
+enum Color
+RED
+GREEN
+BLUE
+
+# class with attributes only (empty methods compartment)
+class Point
++x: int
++y: int
+
+# class with methods only
+class Canvas
+---
++line(a: Point, b: Point): void
++fill(c: Color): void
+
+# class with no members at all
+class Cloneable
+
+Shape ..|> Drawable
+Shape o-- Point : origin [1] [1]
+Shape --> Color : fill
+Canvas ..> Point
+Canvas -- Color
+Shape -() Cloneable
+Logger ..> Canvas : logs
+
+// ---------------------------------------------------------------------
+// CREATIONAL
+// ---------------------------------------------------------------------
+
+// Singleton
+@group singleton: Config
+class Config
+-{static} instance: Config
+-settings: Map<String, String>
+---
+-Config()
++{static} getInstance(): Config
++get(key: String): String
+Config --> Config : instance [1] [0..1]
+
+// Factory Method
+@group factory-method: Creator, ConcreteCreatorA, Product, ConcreteProductA
+abstract class Creator
+---
++factoryMethod(): Product {abstract}
++operation(): void
+class ConcreteCreatorA
+---
++factoryMethod(): Product
+interface Product
+---
++use(): void
+class ConcreteProductA
+---
++use(): void
+ConcreteCreatorA --|> Creator
+ConcreteProductA ..|> Product
+Creator ..> Product : creates
+ConcreteCreatorA ..> ConcreteProductA : creates
+
+// Abstract Factory
+@group abstract-factory: GUIFactory, WinFactory, MacFactory, Button, WinButton, MacButton, Checkbox, WinCheckbox, MacCheckbox
+@same-row WinButton, MacButton, WinCheckbox, MacCheckbox
+interface GUIFactory
+---
++createButton(): Button
++createCheckbox(): Checkbox
+class WinFactory
+---
++createButton(): Button
++createCheckbox(): Checkbox
+class MacFactory
+---
++createButton(): Button
++createCheckbox(): Checkbox
+interface Button
+---
++paint(): void
+interface Checkbox
+---
++toggle(): void
+class WinButton
+---
++paint(): void
+class MacButton
+---
++paint(): void
+class WinCheckbox
+---
++toggle(): void
+class MacCheckbox
+---
++toggle(): void
+WinFactory ..|> GUIFactory
+MacFactory ..|> GUIFactory
+WinButton ..|> Button
+MacButton ..|> Button
+WinCheckbox ..|> Checkbox
+MacCheckbox ..|> Checkbox
+WinFactory ..> WinButton : creates
+WinFactory ..> WinCheckbox : creates
+MacFactory ..> MacButton : creates
+MacFactory ..> MacCheckbox : creates
+
+// Builder
+@group builder: Director, Builder, HouseBuilder, House
+class Director
+-builder: Builder
+---
++construct(): void
+interface Builder
+---
++buildWalls(): void
++buildRoof(): void
++getResult(): House
+class HouseBuilder
+-house: House
+---
++buildWalls(): void
++buildRoof(): void
++getResult(): House
+class House
+-walls: int
+-roof: String
+Director o-- Builder : builder [1] [1]
+HouseBuilder ..|> Builder
+HouseBuilder *-- House : builds [1] [1]
+
+// Prototype
+@group prototype: Prototype, Sheep
+interface Prototype
+---
++clone(): Prototype
+class Sheep
+-name: String
+---
++clone(): Prototype
+Sheep ..|> Prototype
+
+// ---------------------------------------------------------------------
+// STRUCTURAL
+// ---------------------------------------------------------------------
+
+// Adapter
+@group adapter: Client, Target, Adapter, Adaptee
+class Client
+interface Target
+---
++request(): void
+class Adapter
+-adaptee: Adaptee
+---
++request(): void
+class Adaptee
+---
++specificRequest(): void
+Client --> Target : target
+Adapter ..|> Target
+Adapter --> Adaptee : adaptee [1] [1]
+
+// Bridge
+@group bridge: Abstraction, RefinedAbstraction, Implementor, ConcreteImplementorA, ConcreteImplementorB
+abstract class Abstraction
+#impl: Implementor
+---
++operation(): void {abstract}
+class RefinedAbstraction
+---
++operation(): void
+interface Implementor
+---
++operationImpl(): void
+class ConcreteImplementorA
+---
++operationImpl(): void
+class ConcreteImplementorB
+---
++operationImpl(): void
+RefinedAbstraction --|> Abstraction
+Abstraction o-- Implementor : impl [1] [1]
+ConcreteImplementorA ..|> Implementor
+ConcreteImplementorB ..|> Implementor
+
+// Composite
+@group composite: Component, Leaf, Composite
+abstract class Component
+---
++operation(): void {abstract}
++add(c: Component): void
++remove(c: Component): void
+class Leaf
+---
++operation(): void
+class Composite
+-children: List<Component>
+---
++operation(): void
++add(c: Component): void
++remove(c: Component): void
+Leaf --|> Component
+Composite --|> Component
+Composite o-- Component : children [1] [0..*]
+
+// Decorator
+@group decorator: Coffee, SimpleCoffee, CoffeeDecorator, MilkDecorator, SugarDecorator
+interface Coffee
+---
++cost(): double
+class SimpleCoffee
+---
++cost(): double
+abstract class CoffeeDecorator
+#wrapped: Coffee
+---
++cost(): double
+class MilkDecorator
+---
++cost(): double
+class SugarDecorator
+---
++cost(): double
+SimpleCoffee ..|> Coffee
+CoffeeDecorator ..|> Coffee
+CoffeeDecorator o-- Coffee : wraps [1] [1]
+MilkDecorator --|> CoffeeDecorator
+SugarDecorator --|> CoffeeDecorator
+
+// Facade
+@group facade: HomeTheaterFacade, Amplifier, Projector, Lights
+class HomeTheaterFacade
+-amp: Amplifier
+-projector: Projector
+-lights: Lights
+---
++watchMovie(title: String): void
++endMovie(): void
+class Amplifier
+---
++on(): void
++setVolume(v: int): void
+class Projector
+---
++on(): void
+class Lights
+---
++dim(level: int): void
+HomeTheaterFacade --> Amplifier
+HomeTheaterFacade --> Projector
+HomeTheaterFacade --> Lights
+
+// Flyweight
+@group flyweight: FlyweightFactory, Flyweight, TreeType
+class FlyweightFactory
+-{static} pool: Map<String, TreeType>
+---
++{static} getType(name: String): TreeType
+interface Flyweight
+---
++draw(x: int, y: int): void
+class TreeType
+-name: String
+-texture: String
+---
++draw(x: int, y: int): void
+TreeType ..|> Flyweight
+FlyweightFactory o-- TreeType : pool [1] [0..*]
+
+// Proxy
+@group proxy: Image, RealImage, ProxyImage
+interface Image
+---
++display(): void
+class RealImage
+-file: String
+---
++display(): void
+-loadFromDisk(): void
+class ProxyImage
+-real: RealImage
+---
++display(): void
+RealImage ..|> Image
+ProxyImage ..|> Image
+ProxyImage --> RealImage : lazy [1] [0..1]
+
+// ---------------------------------------------------------------------
+// BEHAVIORAL
+// ---------------------------------------------------------------------
+
+// Chain of Responsibility
+@group chain: Handler, AuthHandler, LogHandler
+abstract class Handler
+#next: Handler
+---
++setNext(h: Handler): Handler
++handle(req: String): void {abstract}
+class AuthHandler
+---
++handle(req: String): void
+class LogHandler
+---
++handle(req: String): void
+AuthHandler --|> Handler
+LogHandler --|> Handler
+Handler --> Handler : next [1] [0..1]
+
+// Command
+@group command: Command, LightOnCommand, Light, RemoteControl
+interface Command
+---
++execute(): void
++undo(): void
+class LightOnCommand
+-light: Light
+---
++execute(): void
++undo(): void
+class Light
+---
++on(): void
++off(): void
+class RemoteControl
+-slots: List<Command>
+---
++press(i: int): void
+LightOnCommand ..|> Command
+LightOnCommand --> Light : receiver
+RemoteControl o-- Command : slots [1] [0..*]
+
+// Interpreter
+@group interpreter: Expression, NumberExpr, AddExpr, Context
+interface Expression
+---
++interpret(ctx: Context): int
+class NumberExpr
+-value: int
+---
++interpret(ctx: Context): int
+class AddExpr
+-left: Expression
+-right: Expression
+---
++interpret(ctx: Context): int
+class Context
+-vars: Map<String, Integer>
+NumberExpr ..|> Expression
+AddExpr ..|> Expression
+AddExpr *-- Expression : operands [1] [2]
+Expression ..> Context
+
+// Iterator
+@group iterator: Iterable, Iterator, BookShelf, BookIterator
+interface Iterable
+---
++iterator(): Iterator
+interface Iterator
+---
++hasNext(): boolean
++next(): Object
+class BookShelf
+-books: List<String>
+---
++iterator(): Iterator
+class BookIterator
+-index: int
+---
++hasNext(): boolean
++next(): Object
+BookShelf ..|> Iterable
+BookIterator ..|> Iterator
+BookShelf ..> BookIterator : creates
+BookIterator --> BookShelf : shelf
+
+// Mediator
+@group mediator: Mediator, ChatRoom, User
+interface Mediator
+---
++send(msg: String, from: User): void
+class ChatRoom
+-users: List<User>
+---
++send(msg: String, from: User): void
++join(u: User): void
+class User
+-name: String
+-room: Mediator
+---
++send(msg: String): void
++receive(msg: String): void
+ChatRoom ..|> Mediator
+ChatRoom o-- User : users [1] [0..*]
+User --> Mediator : room
+
+// Memento
+@group memento: Editor, EditorMemento, History
+class Editor
+-content: String
+---
++save(): EditorMemento
++restore(m: EditorMemento): void
+class EditorMemento
+-content: String
+---
+~getContent(): String
+class History
+-stack: Deque<EditorMemento>
+---
++push(m: EditorMemento): void
++pop(): EditorMemento
+Editor ..> EditorMemento : creates
+History o-- EditorMemento : stack [1] [0..*]
+
+// Observer
+@group observer: Subject, Observer, WeatherStation, PhoneDisplay
+interface Subject
+---
++attach(o: Observer): void
++detach(o: Observer): void
++notifyObservers(): void
+interface Observer
+---
++update(temp: double): void
+class WeatherStation
+-observers: List<Observer>
+-temp: double
+---
++attach(o: Observer): void
++detach(o: Observer): void
++notifyObservers(): void
+class PhoneDisplay
+---
++update(temp: double): void
+WeatherStation ..|> Subject
+PhoneDisplay ..|> Observer
+WeatherStation o-- Observer : observers [1] [0..*]
+
+// State
+@group state: Context2, State, IdleState, RunningState
+class Context2
+-state: State
+---
++request(): void
++setState(s: State): void
+interface State
+---
++handle(ctx: Context2): void
+class IdleState
+---
++handle(ctx: Context2): void
+class RunningState
+---
++handle(ctx: Context2): void
+Context2 o-- State : state [1] [1]
+IdleState ..|> State
+RunningState ..|> State
+
+// Strategy
+@group strategy: Sorter, SortStrategy, QuickSort, MergeSort
+class Sorter
+-strategy: SortStrategy
+---
++setStrategy(s: SortStrategy): void
++sort(a: int[]): void
+interface SortStrategy
+---
++sort(a: int[]): void
+class QuickSort
+---
++sort(a: int[]): void
+class MergeSort
+---
++sort(a: int[]): void
+Sorter o-- SortStrategy : strategy [1] [1]
+QuickSort ..|> SortStrategy
+MergeSort ..|> SortStrategy
+
+// Template Method
+@group template-method: DataMiner, CsvMiner, PdfMiner
+abstract class DataMiner
+---
++mine(path: String): void
+#open(path: String): void {abstract}
+#extract(): String {abstract}
+#close(): void
+class CsvMiner
+---
+#open(path: String): void
+#extract(): String
+class PdfMiner
+---
+#open(path: String): void
+#extract(): String
+CsvMiner --|> DataMiner
+PdfMiner --|> DataMiner
+
+// Visitor
+@group visitor: Visitor, AreaVisitor, Element, CircleEl, SquareEl
+interface Visitor
+---
++visitCircle(c: CircleEl): void
++visitSquare(s: SquareEl): void
+class AreaVisitor
+-total: double
+---
++visitCircle(c: CircleEl): void
++visitSquare(s: SquareEl): void
+interface Element
+---
++accept(v: Visitor): void
+class CircleEl
++r: double
+---
++accept(v: Visitor): void
+class SquareEl
++side: double
+---
++accept(v: Visitor): void
+AreaVisitor ..|> Visitor
+CircleEl ..|> Element
+SquareEl ..|> Element
+Element ..> Visitor : accepts
+
+// Implicit class: Logger is never declared, so it must be auto-created as an empty box.

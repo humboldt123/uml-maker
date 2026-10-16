@@ -1,0 +1,79 @@
+// Media library: a small example with a six-way inheritance tree.
+@direction down
+@spacing compact
+@same-row Film, Newspaper, Podcast, Book
+
+class LibraryApp
+-library: Library
+---
++main(args: String[]): void
+
+class Library
+-name: String
+-items: List<MediaItem>
+---
++Library(name: String)
++render(r: Renderer): void
+
+abstract class MediaItem
+#title: String
+---
++render(r: Renderer): void {abstract}
++{static} count(): int
+
+class Book
+-isbn: String
+---
++render(r: Renderer): void
+
+class Magazine
+---
++render(r: Renderer): void
+
+class Film
+-minutes: int
+---
++render(r: Renderer): void
+
+class Album
+-tracks: int
+---
++render(r: Renderer): void
+
+class Podcast
+-host: String
+-episodes: int
+---
++render(r: Renderer): void
+
+class Newspaper
+-edition: String
+---
++render(r: Renderer): void
+
+interface Renderer
+---
++render(s: String): void
+
+class HtmlRenderer
+---
++render(s: String): void
+
+enum Genre
+FICTION
+HISTORY
+SCIENCE
+
+Book --|> MediaItem
+Magazine --|> MediaItem
+Film --|> MediaItem
+Album --|> MediaItem
+Podcast --|> MediaItem
+Newspaper --|> MediaItem
+HtmlRenderer ..|> Renderer
+Library *-- MediaItem : holds [1] [0..*]
+LibraryApp --> Library : catalog [1] [0..1]
+MediaItem ..> Renderer : uses
+MediaItem --> Genre : genre
+MediaItem ..> Loan : creates
+Library -() Serializable
