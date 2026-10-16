@@ -21,11 +21,11 @@ export function checkLayout(layout: DiagramLayout): LayoutProblem[] {
   const headLen = { triangle: STYLE.arrow.triangle, diamond: STYLE.arrow.diamond, open: STYLE.arrow.open, none: 0 };
   for (const e of layout.edges) {
     const n = e.points.length;
-    if (n < 2 || e.rel.source === e.rel.target) continue;
+    if (n < 2) continue;
     const h = headsFor(e);
     const seg = (a: number, b: number) => Math.abs(e.points[a].x - e.points[b].x) + Math.abs(e.points[a].y - e.points[b].y);
-    if (headLen[h.source.kind] && seg(0, 1) < headLen[h.source.kind] + 2) problems.push({ kind: 'short-arrow', detail: `${e.rel.source}→${e.rel.target} source end is ${seg(0, 1)}px` });
-    if (headLen[h.target.kind] && seg(n - 1, n - 2) < headLen[h.target.kind] + 2) problems.push({ kind: 'short-arrow', detail: `${e.rel.source}→${e.rel.target} target end is ${seg(n - 1, n - 2)}px` });
+    if (headLen[h.source.kind] && seg(0, 1) < headLen[h.source.kind] + 4) problems.push({ kind: 'short-arrow', detail: `${e.rel.source}→${e.rel.target} source end is ${seg(0, 1)}px` });
+    if (headLen[h.target.kind] && seg(n - 1, n - 2) < headLen[h.target.kind] + 4) problems.push({ kind: 'short-arrow', detail: `${e.rel.source}→${e.rel.target} target end is ${seg(n - 1, n - 2)}px` });
   }
   // 3. Nodes don't overlap each other.
   for (let i = 0; i < layout.nodes.length; i++) {

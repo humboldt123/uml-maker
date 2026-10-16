@@ -9,7 +9,7 @@ export const STYLE = {
   frame: '#a6a6a6',
   frameText: '#808080',
   background: '#ffffff',
-  arrow: { triangle: 12, triangleHalf: 7, diamond: 14, diamondHalf: 5.5, open: 10, openHalf: 5 },
+  arrow: { triangle: 12, triangleHalf: 7, diamond: 14, diamondHalf: 5.5, open: 8, openHalf: 4.5 },
   dash: '5 3',
 };
 

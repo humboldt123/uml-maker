@@ -16,8 +16,8 @@ const EDGE_STYLE: Record<Exclude<RelKind, 'lollipop'>, string> = {
   realization: 'endArrow=block;endFill=0;endSize=12;dashed=1;dashPattern=5 3;',
   composition: 'startArrow=diamondThin;startFill=1;startSize=14;endArrow=none;',
   aggregation: 'startArrow=diamondThin;startFill=0;startSize=14;endArrow=none;',
-  association: 'endArrow=open;endFill=0;endSize=10;',
-  dependency: 'endArrow=open;endFill=0;endSize=10;dashed=1;dashPattern=5 3;',
+  association: 'endArrow=open;endFill=0;endSize=8;',
+  dependency: 'endArrow=open;endFill=0;endSize=8;dashed=1;dashPattern=5 3;',
   link: 'endArrow=none;',
 };
 

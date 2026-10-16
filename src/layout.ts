@@ -420,6 +420,7 @@ function collectPiece(prep: Prepared, res: ComponentResult, direction: Direction
   }
 
   alignRows({ nodes, edges, lollipops, groups }, rowsToAlign(prep.diagram), direction === 'down' ? 'y' : 'x');
+  widenSelfLoops(nodes, edges);
   placeCenterLabels({ nodes, edges, lollipops }, prep.labelSizes);
   placeEndLabels({ nodes, edges, lollipops }, prep.labelSizes);
   const all: Rect[] = [...nodes, ...groups, ...lollipops.map((l) => ({
@@ -435,6 +436,37 @@ function collectPiece(prep: Prepared, res: ComponentResult, direction: Direction
     all.push(frame);
   }
   return { nodes, edges, lollipops, groups, bbox: bounds(all) };
+}
+
+const SELF_LOOP_REACH = 22;
+
+/**
+ * ELK draws self-loops hugging the box (about 10px out), which leaves no room for an
+ * arrowhead. Push the loop's outer leg out to SELF_LOOP_REACH when nothing is in the way.
+ */
+function widenSelfLoops(nodes: NodeLayout[], edges: EdgeLayout[]) {
+  for (const e of edges) {
+    if (e.rel.source !== e.rel.target || e.points.length < 4) continue;
+    const n = nodes.find((x) => x.def.name === e.rel.source);
+    if (!n) continue;
+    const p0 = e.points[0];
+    const inner = e.points.slice(1, -1);
+    const sides = [
+      { on: Math.abs(p0.x - n.x) < 1, axis: 'x' as const, outer: Math.min(...inner.map((q) => q.x)), dir: -1, edge: n.x },
+      { on: Math.abs(p0.x - n.x - n.width) < 1, axis: 'x' as const, outer: Math.max(...inner.map((q) => q.x)), dir: 1, edge: n.x + n.width },
+      { on: Math.abs(p0.y - n.y) < 1, axis: 'y' as const, outer: Math.min(...inner.map((q) => q.y)), dir: -1, edge: n.y },
+      { on: Math.abs(p0.y - n.y - n.height) < 1, axis: 'y' as const, outer: Math.max(...inner.map((q) => q.y)), dir: 1, edge: n.y + n.height },
+    ];
+    const side = sides.find((sd) => sd.on);
+    if (!side) continue;
+    const reach = Math.abs(side.outer - side.edge);
+    if (reach >= SELF_LOOP_REACH) continue;
+    const shift = (SELF_LOOP_REACH - reach) * side.dir;
+    const before = e.points.map((q) => ({ ...q }));
+    for (const q of inner) if (Math.abs(q[side.axis] - side.outer) < 1) q[side.axis] += shift;
+    const blocked = e.points.some((q, i) => i > 0 && nodes.some((o) => segmentHitsRect(e.points[i - 1], q, o, 1)));
+    if (blocked) e.points = before;
+  }
 }
 
 /** `@same-row` sets (strict) followed by the children of each generalization parent. */
